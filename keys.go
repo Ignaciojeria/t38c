@@ -3,9 +3,11 @@ package t38c
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strconv"
 
-	geojson "github.com/paulmach/go.geojson"
+	"github.com/paulmach/orb"
+	"github.com/paulmach/orb/geojson"
 )
 
 // Keys struct
@@ -16,7 +18,7 @@ type Keys struct {
 // Bounds returns the minimum bounding rectangle for all objects in a key.
 func (ks *Keys) Bounds(ctx context.Context, key string) ([][][]float64, error) {
 	var resp struct {
-		Bounds geojson.Geometry `json:"bounds"`
+		Bounds *geojson.Geometry `json:"bounds"`
 	}
 
 	err := ks.client.jExecute(ctx, &resp, "BOUNDS", key)
@@ -24,7 +26,27 @@ func (ks *Keys) Bounds(ctx context.Context, key string) ([][][]float64, error) {
 		return nil, err
 	}
 
-	return resp.Bounds.Polygon, nil
+	if resp.Bounds == nil {
+		return nil, fmt.Errorf("no bounds data available")
+	}
+
+	polygon, ok := resp.Bounds.Geometry().(orb.Polygon)
+	if !ok {
+		return nil, fmt.Errorf("expected polygon geometry, got %T", resp.Bounds.Geometry())
+	}
+
+	return convertPolygonToFloats(polygon), nil
+}
+
+func convertPolygonToFloats(polygon orb.Polygon) [][][]float64 {
+	result := make([][][]float64, len(polygon))
+	for i, ring := range polygon {
+		result[i] = make([][]float64, len(ring))
+		for j, point := range ring {
+			result[i][j] = []float64{point.Lon(), point.Lat()}
+		}
+	}
+	return result
 }
 
 // Del remove a specified object.

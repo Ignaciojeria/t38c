@@ -4,22 +4,27 @@ import (
 	"context"
 	"testing"
 
-	geojson "github.com/paulmach/go.geojson"
+	"github.com/Ignaciojeria/t38c"
+	"github.com/paulmach/orb"
+	"github.com/paulmach/orb/geojson"
 	"github.com/stretchr/testify/require"
-	"github.com/xjem/t38c"
 )
 
 func testWithin(t *testing.T, client *t38c.Client) {
 	err := client.Keys.Set("points", "point-1").Point(1, 1).Do(context.Background())
 	require.NoError(t, err)
 
-	geom := geojson.NewPolygonGeometry([][][]float64{{
-		{0, 0},
-		{20, 0},
-		{20, 20},
-		{0, 20},
-		{0, 0},
-	}})
+	outerRing := orb.Ring{
+		orb.Point{0, 0},
+		orb.Point{20, 0},
+		orb.Point{20, 20},
+		orb.Point{0, 20},
+		orb.Point{0, 0}, // Cerrando el anillo
+	}
+
+	polygon := orb.Polygon{outerRing}
+
+	geom := geojson.NewGeometry(polygon)
 
 	err = client.Keys.Set("areas", "area-1").Geometry(geom).Do(context.Background())
 	require.NoError(t, err)
