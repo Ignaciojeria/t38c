@@ -3,10 +3,10 @@ module github.com/Ignaciojeria/t38c
 go 1.22
 
 require (
-	github.com/mediocregopher/radix/v4 v4.1.1
+	github.com/mediocregopher/radix/v4 v4.1.4
 	github.com/paulmach/orb v0.11.1
-	github.com/stretchr/testify v1.8.2
-	github.com/tidwall/gjson v1.14.3
+	github.com/stretchr/testify v1.9.0
+	github.com/tidwall/gjson v1.17.1
 )
 
 require (
